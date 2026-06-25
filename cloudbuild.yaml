@@ -13,8 +13,7 @@ steps:
   - 'PYTHONPATH=evalbench:.'
   - 'SKIP_CLOUD_TESTS=true'
 - name: 'gcr.io/cloud-builders/docker'
-
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:$COMMIT_SHA', '-f', 'evalbench_service/Dockerfile', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:$COMMIT_SHA', '-f', 'evalbench_service/containers/linux/Dockerfile', '.']
 - name: 'us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:$COMMIT_SHA'
   dir: '/evalbench'
   args: ['/evalbench/evalbench/run.sh']

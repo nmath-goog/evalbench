@@ -42,10 +42,10 @@ RUN useradd -m -s /bin/bash claudeuser
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN uv run make proto -f ./Makefile
 RUN mkdir -p /tmp_session_files /tmp_sessions /evalbench/results
-RUN cp /evalbench/evalbench_service/supervisord_evalbench.conf /evalbench/supervisord_evalbench.conf
-RUN cp /evalbench/evalbench_service/supervisord_cloudrun.conf /evalbench/supervisord_cloudrun.conf
-RUN cp /evalbench/evalbench_service/supervisord_combined.conf /evalbench/supervisord_combined.conf
-RUN cp /evalbench/evalbench_service/entrypoint.sh /evalbench/entrypoint.sh && chmod +x /evalbench/entrypoint.sh
+RUN cp /evalbench/evalbench_service/containers/linux/supervisord_evalbench.conf /evalbench/supervisord_evalbench.conf
+RUN cp /evalbench/evalbench_service/containers/linux/supervisord_cloudrun.conf /evalbench/supervisord_cloudrun.conf
+RUN cp /evalbench/evalbench_service/containers/linux/supervisord_combined.conf /evalbench/supervisord_combined.conf
+RUN cp /evalbench/evalbench_service/containers/linux/entrypoint.sh /evalbench/entrypoint.sh && chmod +x /evalbench/entrypoint.sh
 RUN chmod +x /evalbench/evalbench/run.sh
 RUN chmod +x /evalbench/viewer/run_frontend.sh
 

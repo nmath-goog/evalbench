@@ -32,10 +32,10 @@ TYPE != awk -F '=' '/GOOGLE_ROLE/ { print $$2 }' /etc/lsb-release
 
 build:
 	git rev-parse --short HEAD > viewer/version.txt || echo "unknown" > viewer/version.txt
-	$(CONTAINER_ENGINE) build -t evalbench -f evalbench_service/Dockerfile .
+	$(CONTAINER_ENGINE) build -t evalbench -f evalbench_service/containers/linux/Dockerfile .
 
 build-test:
-	$(CONTAINER_ENGINE) build -t evalbench-test -f evalbench_service/Dockerfile .
+	$(CONTAINER_ENGINE) build -t evalbench-test -f evalbench_service/containers/linux/Dockerfile .
 
 container:
 	$(CONTAINER_ENGINE) rm -f evalbench_server 2>/dev/null || true; \
