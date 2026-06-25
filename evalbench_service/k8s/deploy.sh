@@ -22,6 +22,13 @@ gcloud container clusters create evalbench-directpath-cluster \
   --workload-pool cloud-db-nl2sql.svc.id.goog \
   --service-account=evalbench@cloud-db-nl2sql.iam.gserviceaccount.com \
   --project=cloud-db-nl2sql
+gcloud container node-pools create windows-pool \
+  --cluster=evalbench-directpath-cluster \
+  --zone=us-central1-c \
+  --image-type=WINDOWS_LTSC_CONTAINERD \
+  --machine-type=n2-standard-4 \
+  --num-nodes=1 \
+  --project=cloud-db-nl2sql
 gcloud container clusters get-credentials evalbench-directpath-cluster \
     --zone=us-central1-c --project=cloud-db-nl2sql
 kubectl apply -f cloud/databases/nl2sql/eval/sqlgen/service/configs/gke_deployment.yaml
@@ -49,9 +56,32 @@ gcloud compute backend-services add-backend evalbench-directpath-bs \
   --balancing-mode RATE \
   --max-rate-per-endpoint 100 \
   --global --project=cloud-db-nl2sql
+
+# Create Windows Backend Service for Directpath
+gcloud compute backend-services create evalbench-directpath-windows-bs \
+  --ip-address-selection-policy IPV6_ONLY \
+  --load-balancing-scheme=INTERNAL_SELF_MANAGED \
+  --protocol=GRPC \
+  --global \
+  --health-checks=evalbench-directpath-health-check \
+  --project=cloud-db-nl2sql
+
+# Add Windows NEG to Windows Backend Service
+gcloud compute backend-services add-backend evalbench-directpath-windows-bs \
+  --network-endpoint-group evalbench-directpath-windows-neg \
+  --network-endpoint-group-zone us-central1-c \
+  --balancing-mode RATE \
+  --max-rate-per-endpoint 100 \
+  --global --project=cloud-db-nl2sql
+
 gcloud network-services meshes import direct-google-access-evalbench-mesh \
     --source=./mesh.yaml \
     --location=global --project=cloud-db-nl2sql
 gcloud network-services grpc-routes import evalbench-grpc-route \
     --source=./evalbench_service/k8s/grpc_route.yaml \
+    --location=global --project=cloud-db-nl2sql
+
+# Import Windows gRPC route
+gcloud network-services grpc-routes import evalbench-grpc-route-windows \
+    --source=./evalbench_service/k8s/grpc_route_windows.yaml \
     --location=global --project=cloud-db-nl2sql

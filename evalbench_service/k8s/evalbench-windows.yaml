@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: evalbench-namespace
+  name: evalbench-windows-eval-server-deploy
+  labels:
+    app: evalbench-windows-eval-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evalbench-windows-eval-server
+  template:
+    metadata:
+      labels:
+        app: evalbench-windows-eval-server
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+      - key: "node.kubernetes.io/os"
+        operator: "Equal"
+        value: "windows"
+        effect: "NoSchedule"
+      serviceAccountName: evalbench-ksa
+      containers:
+      - image: us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server_windows:latest
+        env:
+        - name: EVAL_DB_PASSWORD
+          value: pantheon
+        - name: UV_CACHE_DIR
+          value: C:\tmp\uv-cache
+        - name: EVAL_GCP_PROJECT_ID
+          value: cloud-db-nl2sql
+        - name: GOOGLE_CLOUD_PROJECT
+          value: cloud-db-nl2sql
+        - name: EVAL_GCP_PROJECT_REGION
+          value: us-central1
+        imagePullPolicy: Always
+        name: evalbench-windows-eval
+        resources:
+          requests:
+            cpu: "20"
+            memory: "80Gi"
+          limits:
+            cpu: "20"
+            memory: "80Gi"
+        # Omit Linux-specific securityContext fields that are unsupported on Windows
+        securityContext:
+          readOnlyRootFilesystem: false
+        ports:
+        - protocol: TCP
+          containerPort: 50051
+          name: grpc
+        volumeMounts:
+        - mountPath: C:\tmp
+          name: tmp-volume
+        - mountPath: C:\tmp_session_files
+          name: gcs-fuse-csi-vol
+        - mountPath: C:\tmp_sessions
+          name: evalbench-ssd-vol
+        - mountPath: C:\etc\evalbench-sa-key
+          name: evalbench-sa-key-vol
+          readOnly: true
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      # GCS Fuse CSI driver is not supported on Windows nodes, so we use emptyDir as a fallback
+      - name: gcs-fuse-csi-vol
+        emptyDir: {}
+      - name: evalbench-ssd-vol
+        persistentVolumeClaim:
+          claimName: evalbench-ssd-pvc
+      - name: evalbench-sa-key-vol
+        secret:
+          secretName: evalbench-sa-key
+          defaultMode: 0444
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eval-server-windows
+  namespace: evalbench-namespace
+  annotations:
+    cloud.google.com/neg: '{"exposed_ports":{"50051":{"name": "evalbench-directpath-windows-neg"}}}'
+spec:
+  ipFamilyPolicy: RequireDualStack
+  ipFamilies:
+  - IPv6
+  - IPv4
+  ports:
+  - name: grpc
+    port: 50051
+    protocol: TCP
+    targetPort: 50051
+  - name: ui
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: evalbench-windows-eval-server
+  type: ClusterIP

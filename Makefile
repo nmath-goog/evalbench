@@ -2,8 +2,8 @@
 
 default: deploy
 
-.PHONY: default build build-test container shell push-test push push-corprun \
-        deploy deploy-test deploy-corprun create-precompute-job run-precompute-job \
+.PHONY: default build build-test build-windows container shell push-test push push-corprun \
+        deploy deploy-windows deploy-test deploy-corprun create-precompute-job run-precompute-job \
         undeploy undeploy-test redeploy redeploy-test pod-shell pod-shell-test \
         proto clean test style run binary
 
@@ -36,6 +36,9 @@ build:
 
 build-test:
 	$(CONTAINER_ENGINE) build -t evalbench-test -f evalbench_service/containers/linux/Dockerfile .
+
+build-windows:
+	$(CONTAINER_ENGINE) build -t evalbench-windows -f evalbench_service/containers/windows/Dockerfile .
 
 container:
 	$(CONTAINER_ENGINE) rm -f evalbench_server 2>/dev/null || true; \
@@ -99,6 +102,13 @@ deploy:
 	kubectl apply -f evalbench_service/k8s/evalbench.yaml
 	kubectl apply -f evalbench_service/k8s/hpa.yaml
 	kubectl apply -f evalbench_service/k8s/vertical-autoscale.yaml
+
+deploy-windows:
+	gcloud container clusters get-credentials evalbench-directpath-cluster --zone us-central1-c --project cloud-db-nl2sql
+	kubectl apply -f evalbench_service/k8s/namespace.yaml
+	kubectl apply -f evalbench_service/k8s/pvc.yaml
+	kubectl apply -f evalbench_service/k8s/ksa.yaml
+	kubectl apply -f evalbench_service/k8s/evalbench-windows.yaml
 
 deploy-test:
 	gcloud container clusters get-credentials evalbench-directpath-cluster --zone us-central1-c --project cloud-db-nl2sql

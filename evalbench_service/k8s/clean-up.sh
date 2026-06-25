@@ -1,11 +1,18 @@
 #!/bin/bash
 gcloud network-services grpc-routes delete evalbench-grpc-route --project=cloud-db-nl2sql --location=global
+gcloud network-services grpc-routes delete evalbench-grpc-route-windows --project=cloud-db-nl2sql --location=global
 gcloud network-services meshes delete direct-google-access-evalbench-mesh --project=cloud-db-nl2sql --location=global
 gcloud beta compute backend-services remove-backend evalbench-directpath-bs \
   --network-endpoint-group evalbench-directpath-neg \
   --network-endpoint-group-zone us-central1-c \
   --global --project=cloud-db-nl2sql
 gcloud beta compute backend-services delete evalbench-directpath-bs \
+  --global --project=cloud-db-nl2sql
+gcloud beta compute backend-services remove-backend evalbench-directpath-windows-bs \
+  --network-endpoint-group evalbench-directpath-windows-neg \
+  --network-endpoint-group-zone us-central1-c \
+  --global --project=cloud-db-nl2sql
+gcloud beta compute backend-services delete evalbench-directpath-windows-bs \
   --global --project=cloud-db-nl2sql
 gcloud compute firewall-rules delete gke-evalbench-directpath-firewall \
   --project=cloud-db-nl2sql

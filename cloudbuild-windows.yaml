@@ -1,0 +1,12 @@
+# Building Windows deployer image
+# IMPORTANT: This build must be executed on a Google Cloud Build Private Pool 
+# configured with Windows workers, as the default GCB pool only supports Linux.
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server_windows:$COMMIT_SHA', '-f', 'evalbench_service/containers/windows/Dockerfile', '.']
+images:
+- 'us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server_windows:$COMMIT_SHA'
+options:
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+  pool:
+    name: 'projects/cloud-db-nl2sql/locations/us-central1/pools/windows-private-pool'
