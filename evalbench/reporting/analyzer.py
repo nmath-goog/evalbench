@@ -159,8 +159,14 @@ def analyze_result(
         "skills_best_practices",
     ]
 
-    for metric_name in scorers:
-        metric_name = metric_name.strip()
+    metric_names_to_analyze = list(scorers.keys())
+    if "comparator" in df.columns:
+        for c in df["comparator"].dropna().unique():
+            if c not in metric_names_to_analyze and c != "executable":
+                metric_names_to_analyze.append(c)
+
+    for metric_name in metric_names_to_analyze:
+        metric_name = str(metric_name).strip()
         metric_score = 100
 
         if metric_name in llm_metrics_list:
