@@ -100,6 +100,13 @@ def _build_instances(
     if "global_models" in sig_params:
         kwargs["global_models"] = global_models
 
+    if scorer_cls == pythonscorer.PythonScorer:
+        custom_name = config.get("scorer_name")
+        if not custom_name and config.get("script_path") and isinstance(config["script_path"], str):
+            custom_name = os.path.splitext(os.path.basename(config["script_path"]))[0].strip()
+        if custom_name:
+            kwargs["name"] = custom_name
+
     return [scorer_cls(config, **kwargs)]
 
 
