@@ -80,6 +80,16 @@ def process_directory(d, results_dir):
         llmrater = get_metric_pct(llmrater_row)
         goal_completion = get_metric_pct(goal_completion_row)
 
+        # Fallback for custom named scorers if standard metrics are absent
+        if exact_match_row.empty and llmrater_row.empty and trajectory_row.empty and goal_completion_row.empty:
+            custom_rows = summary_df[~summary_df['metric_name'].isin([
+                'end_to_end_latency', 'token_consumption', 'turn_count', 'executable'
+            ])]
+            if not custom_rows.empty:
+                custom_pcts = [get_metric_pct(summary_df[summary_df['metric_name'] == m]) for m in custom_rows['metric_name'].unique()]
+                if custom_pcts:
+                    exact_match = sum(custom_pcts) / len(custom_pcts)
+
         if goal_completion == 0.0 and goal_completion_row.empty:
             # Fallback to results.csv or scores.csv if goal_completion is missing from summary.csv
             results_file = os.path.join(results_dir, d, "results.csv")

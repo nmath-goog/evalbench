@@ -45,8 +45,24 @@ class PythonScorer(comparator.Comparator):
         **kwargs,
     ) -> Tuple[float, str]:
 
+        # Extract scenario ID if present in kwargs or generated_eval_result
+        scenario_id = kwargs.get("scenario_id") or kwargs.get("id") or ""
+        if not scenario_id and isinstance(generated_eval_result, str) and generated_eval_result:
+            try:
+                parsed_eval_res = json.loads(generated_eval_result)
+                if isinstance(parsed_eval_res, dict):
+                    scenario_id = (
+                        parsed_eval_res.get("scenario_id")
+                        or parsed_eval_res.get("id")
+                        or parsed_eval_res.get("scenario", {}).get("id", "")
+                    )
+            except Exception:
+                pass
+
         # Prepare input data
         input_data = {
+            "id": kwargs.get("id") or scenario_id,
+            "scenario_id": scenario_id,
             "nl_prompt": nl_prompt,
             "golden_query": golden_query,
             "query_type": query_type,
@@ -61,8 +77,13 @@ class PythonScorer(comparator.Comparator):
             "sqlite_db_dir": self.sqlite_db_dir,
         }
 
+        # Include any additional kwargs into input_data if not already present
+        for k, v in kwargs.items():
+            if k not in input_data:
+                input_data[k] = v
+
         try:
-            json_input = json.dumps(input_data)
+            json_input = json.dumps(input_data, default=str)
         except Exception as e:
             return 0.0, f"FAIL: Failed to serialize input to JSON: {e}"
 

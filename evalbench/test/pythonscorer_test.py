@@ -21,12 +21,16 @@ class TestPythonScorer(unittest.TestCase):
             nl_prompt="", golden_query="", query_type="",
             golden_execution_result="", golden_eval_result="", golden_error="",
             generated_query="", generated_execution_result="",
-            generated_eval_result="", generated_error=""
+            generated_eval_result=json.dumps({"scenario": {"id": "test_scenario_123"}}),
+            generated_error="", id="test_scenario_123"
         )
 
         self.assertEqual(score, 100.0)
         self.assertEqual(reason, "PASS")
         mock_run.assert_called_once()
+        passed_input = json.loads(mock_run.call_args[1]["input"])
+        self.assertEqual(passed_input["id"], "test_scenario_123")
+        self.assertEqual(passed_input["scenario_id"], "test_scenario_123")
 
     @patch('scorers.pythonscorer.subprocess.run')
     def test_python_scorer_fail(self, mock_run):

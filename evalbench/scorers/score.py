@@ -158,8 +158,16 @@ def compare(
             if eval_output_item["generated_sql"] is not None:
                 sig = inspect.signature(comp.compare)
                 compare_kwargs = {}
-                if "database" in sig.parameters:
+                accepts_var_kwargs = any(
+                    p.kind == inspect.Parameter.VAR_KEYWORD
+                    for p in sig.parameters.values()
+                )
+                if "database" in sig.parameters or accepts_var_kwargs:
                     compare_kwargs["database"] = eval_output_item.get("database", "")
+                if "id" in sig.parameters or accepts_var_kwargs:
+                    compare_kwargs["id"] = eval_output_item.get("id", "")
+                if "scenario_id" in sig.parameters or accepts_var_kwargs:
+                    compare_kwargs["scenario_id"] = eval_output_item.get("id", "")
                 result = comp.compare(
                     eval_output_item["nl_prompt"],
                     eval_output_item["golden_sql"],
@@ -193,7 +201,7 @@ def compare(
                 "generated_error": eval_output_item["generated_error"],
                 "dialects": eval_output_item["dialects"],
                 "database": eval_output_item["database"],
-                "job_id": eval_output_item["job_id"],
+                "job_id": eval_output_item.get("job_id", ""),
             })
             logging.debug("scoring: %s %s %s", score_dict["id"], name, score_val)
             scoring_results.append(score_dict)
